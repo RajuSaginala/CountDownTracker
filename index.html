@@ -76,6 +76,22 @@ body::before{
   0%{ background-position:-120px 0; }
   100%{ background-position:120px 0; }
 }
+@keyframes streakGlow{
+  0%,100%{ box-shadow:0 0 4px rgba(255,140,66,0.45); }
+  50%{ box-shadow:0 0 11px rgba(255,140,66,0.95); }
+}
+@keyframes flameFlicker{
+  0%,100%{ transform:translateX(-50%) scale(1) rotate(-4deg); opacity:.85; }
+  50%{ transform:translateX(-50%) scale(1.18) rotate(4deg); opacity:1; }
+}
+@keyframes flameWiggle{
+  0%,100%{ transform:scale(1) rotate(-6deg); }
+  50%{ transform:scale(1.15) rotate(6deg); }
+}
+@keyframes emberPulse{
+  0%,100%{ box-shadow:0 0 0 0 rgba(233,112,75,0.35); }
+  50%{ box-shadow:0 0 18px 2px rgba(233,112,75,0.5); }
+}
 .app{
   max-width:960px;
   margin:0 auto;
@@ -165,6 +181,17 @@ body::before{
 .stat-card.accent-teal .num{color:var(--teal);}
 .stat-card.accent-gold .num{color:var(--gold);}
 
+.num-row{display:flex;align-items:baseline;gap:6px;}
+.flame{font-size:16px;display:inline-block;animation:flameWiggle 1s ease-in-out infinite;}
+.flame:empty{display:none;}
+#streakCard.tier-2{border-color:rgba(233,112,75,0.5);}
+#streakCard.tier-2 .flame{font-size:15px;}
+#streakCard.tier-3{
+  border-color:rgba(233,112,75,0.7);
+  animation: emberPulse 1.8s ease-in-out infinite, fadeInUp .5s ease both;
+}
+#streakCard.tier-3 .flame{font-size:14px;letter-spacing:-2px;}
+
 section.block{
   background:var(--surface);
   border:1px solid var(--border);
@@ -209,6 +236,23 @@ section.block h2 .sub{
 .day-cell.level-2{background:#1B6E63;}
 .day-cell.level-3{background:#22987F;}
 .day-cell.level-4{background:var(--teal);box-shadow:0 0 6px rgba(52,214,176,0.55);}
+.day-cell.level-r1{background:#4A2530;}
+.day-cell.level-r2{background:#7A2F34;}
+.day-cell.level-r3{background:#B23A3A;}
+.day-cell.level-r4{background:#FF4757;box-shadow:0 0 6px rgba(255,71,87,0.5);}
+.day-cell.streak-cell{ animation: popIn .35s ease both, streakGlow 1.8s ease-in-out infinite; }
+.day-cell.no-anim.streak-cell{ animation: streakGlow 1.8s ease-in-out infinite; }
+.day-cell.streak-end{ position:relative; overflow:visible; }
+.day-cell.streak-end::after{
+  content:'🔥';
+  position:absolute;
+  top:-13px; left:50%;
+  font-size:11px;
+  animation: flameFlicker 1s ease-in-out infinite;
+  pointer-events:none;
+  z-index:3;
+}
+.day-cell.streak-end-big::after{ content:'🔥🔥'; font-size:10px; top:-12px; }
 .day-cell.future{
   background:repeating-linear-gradient(135deg,#161C30,#161C30 3px,#1c2238 3px,#1c2238 6px);
   cursor:default;
@@ -220,11 +264,29 @@ section.block h2 .sub{
 .day-cell.empty-pad{background:transparent;cursor:default;animation:none;}
 
 .legend{
-  display:flex;align-items:center;gap:6px;margin-top:12px;
+  display:flex;flex-direction:column;gap:6px;margin-top:14px;
   font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--text-muted);
 }
+.legend-row{display:flex;align-items:center;gap:6px;}
+.legend-row .legend-label{width:64px;flex-shrink:0;}
 .legend .day-cell{cursor:default;}
 .legend .day-cell:hover{transform:none;}
+
+.streak-banner{
+  display:none;
+  align-items:center;gap:8px;
+  background:linear-gradient(90deg, rgba(233,112,75,0.12), rgba(232,184,75,0.08));
+  border:1px solid rgba(233,112,75,0.35);
+  border-radius:8px;
+  padding:9px 14px;
+  margin-bottom:14px;
+  font-family:'IBM Plex Mono',monospace;
+  font-size:12px;
+  color:#F0C89B;
+  animation: fadeInUp .4s ease both;
+}
+.streak-banner.show{display:flex;}
+.streak-banner .flame{font-size:15px;}
 
 .month-labels{
   display:flex;gap:3px;width:max-content;margin-bottom:6px;
@@ -362,6 +424,51 @@ section.block.celebrate{ animation: celebrateGlow 1s ease; }
   padding:20px 0;text-align:center;
 }
 
+.category-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+  gap:10px;
+}
+.category-card{
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:13px 14px;
+  transition:transform .15s ease, border-color .15s ease;
+}
+.category-card:hover{transform:translateY(-2px);border-color:#3a3f60;}
+.category-card .cat-head{
+  display:flex;align-items:center;gap:7px;margin-bottom:9px;
+}
+.category-card .cat-head .task-dot{width:8px;height:8px;}
+.category-card .cat-name{font-size:12.5px;font-weight:600;flex:1;}
+.category-card .cat-pct{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:600;}
+.category-bar{
+  height:5px;border-radius:3px;background:var(--surface);
+  overflow:hidden;margin-bottom:8px;
+}
+.category-bar-fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.34,1.56,.64,1);}
+.category-status{
+  font-family:'IBM Plex Mono',monospace;font-size:10px;
+  letter-spacing:0.04em;text-transform:uppercase;
+  padding:3px 7px;border-radius:5px;display:inline-block;
+}
+.category-status.status-locked{background:rgba(52,214,176,0.15);color:var(--teal);}
+.category-status.status-ontrack{background:rgba(232,184,75,0.15);color:var(--gold);}
+.category-status.status-slipping{background:rgba(233,112,75,0.15);color:var(--coral);}
+.category-status.status-reset{background:rgba(255,71,87,0.15);color:#FF6B7A;}
+.category-empty{
+  color:var(--text-muted);font-size:12px;font-family:'IBM Plex Mono',monospace;
+  padding:10px 0;
+}
+.category-insight{
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--border);
+  font-size:12.5px;color:var(--text-muted);line-height:1.6;
+}
+.category-insight strong{color:var(--text);font-weight:600;}
+.category-insight .insight-good{color:var(--teal);}
+.category-insight .insight-bad{color:var(--coral);}
+
 *, *::before, *::after{ -webkit-tap-highlight-color: transparent; }
 button, .task-row, .day-cell{ touch-action: manipulation; }
 
@@ -395,6 +502,10 @@ button, .task-row, .day-cell{ touch-action: manipulation; }
   .form-btn{padding:10px 14px;font-size:12px;}
 
   .delete-x{opacity:.7;}
+
+  .category-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .category-card{padding:11px 12px;}
+  .streak-banner{font-size:11px;padding:8px 11px;}
 }
 
 @media (max-width:360px){
@@ -423,8 +534,8 @@ button, .task-row, .day-cell{ touch-action: manipulation; }
       <div class="num mono" id="statRemaining">–</div>
       <div class="label">Days to Dec 31</div>
     </div>
-    <div class="stat-card accent-teal">
-      <div class="num mono" id="statStreak">–</div>
+    <div class="stat-card accent-teal" id="streakCard">
+      <div class="num-row"><span class="num mono" id="statStreak">–</span><span class="flame" id="streakFlame"></span></div>
       <div class="label">Current streak</div>
     </div>
     <div class="stat-card accent-teal">
@@ -435,19 +546,37 @@ button, .task-row, .day-cell{ touch-action: manipulation; }
 
   <section class="block">
     <h2>Flight log <span class="sub" id="loadingNote">loading…</span></h2>
+    <div class="streak-banner" id="streakBanner">
+      <span class="flame">🔥</span>
+      <span id="streakBannerText"></span>
+    </div>
     <div id="heatmapWrap">
       <div id="monthLabels" class="month-labels"></div>
       <div id="heatmap"></div>
     </div>
     <div class="legend">
-      Less
-      <div class="day-cell level-0"></div>
-      <div class="day-cell level-1"></div>
-      <div class="day-cell level-2"></div>
-      <div class="day-cell level-3"></div>
-      <div class="day-cell level-4"></div>
-      More
+      <div class="legend-row">
+        <span class="legend-label">Completed</span>
+        <div class="day-cell level-0"></div>
+        <div class="day-cell level-1"></div>
+        <div class="day-cell level-2"></div>
+        <div class="day-cell level-3"></div>
+        <div class="day-cell level-4"></div>
+      </div>
+      <div class="legend-row">
+        <span class="legend-label">Missed</span>
+        <div class="day-cell level-r1"></div>
+        <div class="day-cell level-r2"></div>
+        <div class="day-cell level-r3"></div>
+        <div class="day-cell level-r4"></div>
+      </div>
     </div>
+  </section>
+
+  <section class="block">
+    <h2>Category performance</h2>
+    <div class="category-grid" id="categoryGrid"></div>
+    <div class="category-insight" id="categoryInsight"></div>
   </section>
 
   <section class="block" id="dayPanelSection">
@@ -543,6 +672,14 @@ function getAllDates(){
 }
 const ALL_DATES = getAllDates();
 
+const CATEGORY_META = {
+  dsa:     { label: 'DSA / System Design', color: 'var(--gold)' },
+  gym:     { label: 'Gym',                 color: 'var(--coral)' },
+  project: { label: 'Personal Project',    color: 'var(--violet)' },
+  sleep:   { label: 'Sleep & Wake',        color: 'var(--blue)' },
+  custom:  { label: 'Custom tasks',        color: '#C7CBDD' },
+};
+
 function tasksFor(dateStr){
   return TASKS[parseDate(dateStr).getDay()];
 }
@@ -562,12 +699,20 @@ function percentFor(dateStr){
   return tasks.length ? Math.round((checked/tasks.length)*100) : 0;
 }
 
-function levelFor(pct){
+function levelForToday(pct){
   if(pct <= 0) return 'level-0';
   if(pct < 40) return 'level-1';
   if(pct < 70) return 'level-2';
   if(pct < 100) return 'level-3';
   return 'level-4';
+}
+
+function levelForPast(pct){
+  if(pct === 100) return 'level-4';
+  if(pct <= 0) return 'level-r4';
+  if(pct < 40) return 'level-r3';
+  if(pct < 70) return 'level-r2';
+  return 'level-r1';
 }
 
 function loadData(){
@@ -628,9 +773,12 @@ function computeStats(){
 
   // streak: walk backward from today (or clampedToday) while pct === 100
   let streak = 0;
+  const streakDates = [];
   for(let i = elapsedDates.length - 1; i >= 0; i--){
-    if(percentFor(elapsedDates[i]) === 100) streak++;
-    else break;
+    if(percentFor(elapsedDates[i]) === 100){
+      streak++;
+      streakDates.unshift(elapsedDates[i]);
+    } else break;
   }
 
   // average consistency across elapsed days
@@ -644,8 +792,26 @@ function computeStats(){
     elapsed: elapsedDates.length,
     remaining,
     streak,
+    streakDates,
     avg
   };
+}
+
+function computeCategoryStats(){
+  const today = todayStr();
+  const clampedToday = today > END_DATE ? END_DATE : today;
+  const elapsedDates = ALL_DATES.filter(d => d <= clampedToday);
+  const cats = {};
+  elapsedDates.forEach(dateStr => {
+    const tasks = allTasksFor(dateStr);
+    const dayData = data[dateStr] || {};
+    tasks.forEach(t => {
+      if(!cats[t.cat]) cats[t.cat] = { total:0, checked:0 };
+      cats[t.cat].total++;
+      if(dayData[t.id]) cats[t.cat].checked++;
+    });
+  });
+  return cats;
 }
 
 function animateNumber(el, from, to, suffix, duration){
@@ -661,13 +827,43 @@ function animateNumber(el, from, to, suffix, duration){
   requestAnimationFrame(tick);
 }
 
+let lastStats = null;
+
+function updateStreakFlame(streak){
+  const el = document.getElementById('streakFlame');
+  const card = document.getElementById('streakCard');
+  card.classList.remove('tier-1','tier-2','tier-3');
+  if(streak < 2){ el.textContent = ''; return; }
+  if(streak < 7){ el.textContent = '🔥'; card.classList.add('tier-1'); }
+  else if(streak < 14){ el.textContent = '🔥🔥'; card.classList.add('tier-2'); }
+  else { el.textContent = '🔥🔥🔥'; card.classList.add('tier-3'); }
+}
+
+function updateStreakBanner(streak){
+  const banner = document.getElementById('streakBanner');
+  const text = document.getElementById('streakBannerText');
+  if(streak >= 3){
+    banner.classList.add('show');
+    text.textContent = streak >= 14
+      ? `${streak}-day streak — you're absolutely on fire. Don't stop now.`
+      : streak >= 7
+      ? `${streak}-day streak — a full week of showing up. Keep it burning.`
+      : `${streak}-day streak going — keep the fire lit.`;
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
 function renderStats(){
   const s = computeStats();
   animateNumber(document.getElementById('statElapsed'), prevStats.elapsed, s.elapsed, '', 500);
   animateNumber(document.getElementById('statRemaining'), prevStats.remaining, s.remaining, '', 500);
   animateNumber(document.getElementById('statStreak'), prevStats.streak, s.streak, s.streak===1?' day':' days', 500);
   animateNumber(document.getElementById('statAvg'), prevStats.avg, s.avg, '%', 500);
+  updateStreakFlame(s.streak);
+  updateStreakBanner(s.streak);
   prevStats = s;
+  lastStats = s;
 }
 
 function renderHeatmap(){
@@ -729,16 +925,99 @@ function renderHeatmap(){
         cell.classList.add('future');
         cell.title = `${dateStr} — upcoming`;
       } else {
+        const tasks = allTasksFor(dateStr);
+        const dayData = data[dateStr] || {};
+        const checkedCount = tasks.filter(t => dayData[t.id]).length;
+        const totalCount = tasks.length;
         const pct = percentFor(dateStr);
-        cell.classList.add(levelFor(pct));
-        cell.title = `${dateStr} — ${pct}% complete`;
+        const missed = totalCount - checkedCount;
+
+        if(dateStr === today){
+          cell.classList.add(levelForToday(pct));
+          cell.title = totalCount ? `${dateStr} — ${checkedCount}/${totalCount} done so far` : `${dateStr}`;
+        } else {
+          cell.classList.add(levelForPast(pct));
+          cell.title = pct === 100
+            ? `${dateStr} — all ${totalCount} done! 🔥`
+            : `${dateStr} — ${checkedCount}/${totalCount} done, ${missed} missed`;
+        }
+
         if(dateStr === today) cell.classList.add('is-today');
         if(dateStr === selectedDate) cell.classList.add('selected');
+
+        if(lastStats && lastStats.streakDates && lastStats.streakDates.includes(dateStr) && lastStats.streak >= 2){
+          cell.classList.add('streak-cell');
+          const isStreakEnd = dateStr === lastStats.streakDates[lastStats.streakDates.length - 1];
+          if(isStreakEnd && lastStats.streak >= 3){
+            cell.classList.add(lastStats.streak >= 7 ? 'streak-end-big' : 'streak-end');
+          }
+        }
+
         cell.addEventListener('click', () => { selectedDate = dateStr; showAddForm = false; renderAll(); });
       }
       cols[w].appendChild(cell);
       cursor.setDate(cursor.getDate()+1);
     }
+  }
+}
+
+function statusForPct(pct){
+  if(pct >= 85) return { cls:'status-locked', label:'Locked in' };
+  if(pct >= 60) return { cls:'status-ontrack', label:'On track' };
+  if(pct >= 35) return { cls:'status-slipping', label:'Slipping' };
+  return { cls:'status-reset', label:'Needs a reset' };
+}
+
+function renderCategoryPerformance(){
+  const grid = document.getElementById('categoryGrid');
+  const insight = document.getElementById('categoryInsight');
+  const cats = computeCategoryStats();
+  const order = ['dsa','gym','project','sleep','custom'];
+
+  const rows = order
+    .filter(id => cats[id] && cats[id].total > 0)
+    .map(id => {
+      const c = cats[id];
+      const pct = Math.round((c.checked / c.total) * 100);
+      return { id, pct, ...cats[id] };
+    });
+
+  if(!rows.length){
+    grid.innerHTML = '<div class="category-empty">Check off a few tasks and your category breakdown will show up here.</div>';
+    insight.innerHTML = '';
+    return;
+  }
+
+  grid.innerHTML = rows.map(r => {
+    const meta = CATEGORY_META[r.id];
+    const status = statusForPct(r.pct);
+    return `
+      <div class="category-card">
+        <div class="cat-head">
+          <div class="task-dot dot-${r.id}"></div>
+          <div class="cat-name">${meta.label}</div>
+        </div>
+        <div class="category-bar"><div class="category-bar-fill" style="width:${r.pct}%;background:${meta.color}"></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="category-status ${status.cls}">${status.label}</span>
+          <span class="cat-pct mono" style="color:${meta.color}">${r.pct}%</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  // find strongest / weakest among real (non-custom) recurring categories for the insight line
+  const coreRows = rows.filter(r => r.id !== 'custom');
+  if(coreRows.length >= 2){
+    const sorted = [...coreRows].sort((a,b) => a.pct - b.pct);
+    const weakest = sorted[0];
+    const strongest = sorted[sorted.length - 1];
+    if(weakest.id !== strongest.id){
+      insight.innerHTML = `Most consistent: <strong class="insight-good">${CATEGORY_META[strongest.id].label} (${strongest.pct}%)</strong>. Needs the most attention: <strong class="insight-bad">${CATEGORY_META[weakest.id].label} (${weakest.pct}%)</strong>.`;
+    } else {
+      insight.innerHTML = `You're tracking evenly across categories so far.`;
+    }
+  } else {
+    insight.innerHTML = '';
   }
 }
 
@@ -861,6 +1140,7 @@ function renderDayPanel(){
 function renderAll(){
   renderStats();
   renderHeatmap();
+  renderCategoryPerformance();
   renderDayPanel();
   initialRender = false;
 
